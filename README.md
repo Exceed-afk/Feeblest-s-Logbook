@@ -1,6 +1,6 @@
 # Logbook
 
-A private, Obsidian-style journal that runs entirely in your browser.
+A privat and very simple Obsidian-style journal that runs entirely in your browser.
 
 ## Run it
 
