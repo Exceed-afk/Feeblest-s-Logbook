@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logbook</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <aside class="sidebar" id="sidebar" aria-label="Notes">
+      <div class="side-head">
+        <h1 class="brand">Logbook</h1>
+        <button type="button" id="btn-vault" class="vault-btn">
+          <span class="vault-dot off" id="vault-dot" aria-hidden="true"></span>
+          <span id="vault-label">Set up vault</span>
+        </button>
+      </div>
+
+      <div class="side-actions">
+        <button type="button" id="btn-new" class="primary">New note</button>
+        <button type="button" id="btn-daily">Today</button>
+      </div>
+
+      <input type="search" id="search" class="search" placeholder="Search notes" aria-label="Search notes" autocomplete="off">
+
+      <div class="recent-list" id="recent-list" aria-label="Recent notes" hidden></div>
+
+      <div class="tag-list" id="tag-list" role="group" aria-label="Filter by tag" hidden></div>
+
+      <nav class="note-list" id="note-list" aria-label="All notes"></nav>
+
+      <div class="side-tools" id="side-tools">
+        <div class="side-foot" id="side-tools-menu" hidden>
+          <button type="button" id="btn-calendar">Calendar</button>
+          <button type="button" id="btn-trash">Trash</button>
+          <button type="button" id="btn-vault-password" hidden>Change password</button>
+          <button type="button" id="btn-hide-titles" aria-pressed="false">Hide sealed titles: Off</button>
+          <button type="button" id="btn-folder">Connect folder</button>
+          <button type="button" id="btn-restore-folder">Restore folder</button>
+          <button type="button" id="btn-graph">Graph</button>
+          <button type="button" id="btn-export">Export</button>
+          <button type="button" id="btn-import">Import</button>
+          <button type="button" id="btn-theme">Dark mode</button>
+        </div>
+        <button type="button" id="btn-tools" class="tools-toggle" aria-label="Open tools menu" aria-expanded="false" aria-controls="side-tools-menu">
+          <span class="hamburger-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>Tools</span>
+        </button>
+        <input type="file" id="file-import" accept="application/json,.json" hidden>
+      </div>
+    </aside>
+
+    <div class="backdrop" id="backdrop"></div>
+
+    <main class="main" id="main">
+      <div class="banner" id="banner" role="status" hidden>
+        <span id="banner-text"></span>
+        <button type="button" id="banner-export">Export backup</button>
+        <button type="button" id="banner-dismiss" aria-label="Dismiss reminder">Dismiss</button>
+      </div>
+
+      <header class="topbar">
+        <button type="button" id="btn-menu" class="menu-btn">Notes</button>
+        <input type="text" id="title" class="title-input" aria-label="Note title" autocomplete="off" spellcheck="false" maxlength="120" disabled>
+        <span class="seal note-seal" id="note-seal" role="img" aria-label="Sealed note" hidden></span>
+        <div class="top-actions">
+          <button type="button" id="btn-mode">Preview</button>
+          <button type="button" id="btn-lock-note">Lock note</button>
+          <button type="button" id="btn-pin">Pin note</button>
+          <button type="button" id="btn-focus" aria-pressed="false">Focus</button>
+          <button type="button" id="btn-delete" class="danger">Delete</button>
+        </div>
+      </header>
+
+      <section class="stage" id="stage">
+        <div class="empty" id="empty" hidden>
+          <p>No note is open.</p>
+          <button type="button" id="btn-empty-new" class="primary">New note</button>
+        </div>
+
+        <textarea id="editor" class="editor" aria-label="Note text" spellcheck="true" placeholder="Start writing" hidden></textarea>
+        <div id="link-suggestions" class="link-suggestions" role="listbox" aria-label="Note link suggestions" hidden></div>
+
+        <article id="preview" class="preview" hidden></article>
+
+        <div class="sealed" id="sealed" hidden>
+          <div class="seal-art" aria-hidden="true"></div>
+          <h2 id="sealed-title">This note is sealed</h2>
+          <p id="sealed-text">Unlock the vault to read and edit it.</p>
+          <button type="button" id="btn-sealed-unlock" class="primary">Unlock vault</button>
+        </div>
+      </section>
+
+      <footer class="statusbar">
+        <span id="word-count"></span>
+        <span id="save-state"></span>
+        <span id="flash" class="flash" aria-live="polite"></span>
+      </footer>
+    </main>
+
+    <aside class="rail" id="rail" aria-label="Connections">
+      <section>
+        <h2>Backlinks</h2>
+        <ul id="backlinks" class="link-list"></ul>
+      </section>
+      <section>
+        <h2>Links in this note</h2>
+        <ul id="outlinks" class="link-list"></ul>
+      </section>
+      <section>
+        <h2>Outline</h2>
+        <ul id="outline-list" class="link-list"></ul>
+      </section>
+      <p class="rail-note" id="rail-note" hidden>Sealed notes aren't searched or counted while the vault is locked.</p>
+    </aside>
+  </div>
+
+  <dialog id="command-dialog" aria-labelledby="command-title">
+    <form id="command-form" method="dialog">
+      <h2 id="command-title">Quick actions</h2>
+      <label class="field">
+        <span>Search notes or commands</span>
+        <input type="text" id="command-input" autocomplete="off" spellcheck="false">
+      </label>
+      <ul id="command-list" class="command-list" role="listbox" aria-label="Commands"></ul>
+    </form>
+  </dialog>
+
+  <dialog id="vault-dialog" aria-labelledby="vault-title">
+    <form id="vault-form" novalidate>
+      <h2 id="vault-title">Unlock your vault</h2>
+      <p id="vault-intro" class="muted"></p>
+
+      <label class="field">
+        <span>Vault password</span>
+        <input type="password" id="vault-pass" autocomplete="current-password">
+      </label>
+
+      <label class="field" id="vault-confirm-row" hidden>
+        <span>Confirm password</span>
+        <input type="password" id="vault-pass2" autocomplete="new-password">
+      </label>
+
+      <label class="field" id="vault-hint-row" hidden>
+        <span>Password hint (optional, stored unencrypted)</span>
+        <input type="text" id="vault-hint" maxlength="80" autocomplete="off">
+      </label>
+
+      <button type="button" id="vault-hint-btn" class="link-btn" hidden>Show hint</button>
+      <p id="vault-hint-text" class="hint-text" hidden></p>
+
+      <p id="vault-error" class="error" role="alert"></p>
+
+      <div class="dialog-actions">
+        <button type="button" id="vault-cancel">Cancel</button>
+        <button type="submit" id="vault-submit" class="primary">Unlock vault</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="password-dialog" aria-labelledby="password-title">
+    <form id="password-form" novalidate>
+      <h2 id="password-title">Change vault password</h2>
+      <p class="muted">Every sealed note will be re-encrypted before the change is saved.</p>
+      <label class="field">
+        <span>New password</span>
+        <input type="password" id="new-vault-pass" autocomplete="new-password">
+      </label>
+      <label class="field">
+        <span>Confirm new password</span>
+        <input type="password" id="new-vault-pass2" autocomplete="new-password">
+      </label>
+      <label class="field">
+        <span>Password hint (optional)</span>
+        <input type="text" id="new-vault-hint" maxlength="80" autocomplete="off">
+      </label>
+      <p id="password-error" class="error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" id="password-cancel">Cancel</button>
+        <button type="submit" id="password-submit" class="primary">Change password</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="calendar-dialog" class="wide" aria-labelledby="calendar-title">
+    <div class="calendar-head">
+      <button type="button" id="calendar-prev" aria-label="Previous month">Previous</button>
+      <h2 id="calendar-title"></h2>
+      <button type="button" id="calendar-next" aria-label="Next month">Next</button>
+      <button type="button" id="calendar-close">Close</button>
+    </div>
+    <div class="calendar-layout">
+      <div>
+        <div class="calendar-weekdays" aria-hidden="true">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid" role="grid" aria-label="Daily notes calendar"></div>
+      </div>
+      <section class="on-this-day">
+        <h3>On this day</h3>
+        <ul id="on-this-day" class="link-list"></ul>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="trash-dialog" aria-labelledby="trash-title">
+    <div class="calendar-head">
+      <h2 id="trash-title">Trash</h2>
+      <button type="button" id="trash-close">Close</button>
+    </div>
+    <p class="muted">Deleted notes are kept for 30 days, then removed automatically.</p>
+    <ul id="trash-list" class="trash-list"></ul>
+  </dialog>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <h2 id="confirm-title"></h2>
+    <p id="confirm-text" class="muted"></p>
+    <div class="dialog-actions">
+      <button type="button" id="confirm-cancel">Cancel</button>
+      <button type="button" id="confirm-ok" class="primary"></button>
+    </div>
+  </dialog>
+
+  <dialog id="graph-dialog" class="wide" aria-labelledby="graph-title">
+    <div class="graph-head">
+      <h2 id="graph-title">Graph</h2>
+      <button type="button" id="graph-close">Close</button>
+    </div>
+    <p id="graph-note" class="muted"></p>
+    <canvas id="graph-canvas" class="graph-canvas" aria-label="Graph of your notes and the links between them. Use the note list to open notes with the keyboard."></canvas>
+  </dialog>
+
+  <script src="js/crypto.js"></script>
+  <script src="js/markdown.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/graph.js"></script>
+  <script src="js/folder.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
